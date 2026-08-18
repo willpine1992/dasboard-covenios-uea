@@ -246,7 +246,7 @@ html, body {
 }
 .acordos-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; min-height: 0; }
 .acordos-row .panel { min-height: 0; }
-.acordos-row--filters { grid-template-columns: 220px 1fr 1fr; }
+.acordos-row--filters { grid-template-columns: 20fr 30fr 50fr; }
 
 .filter-group { display: flex; flex-direction: column; gap: 6px; }
 .filter-group__title {
