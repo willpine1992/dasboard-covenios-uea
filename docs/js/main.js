@@ -19,11 +19,19 @@
   ];
   const filters = {};
   FILTER_FIELDS.forEach((f) => { filters[f.key] = new Set(); });
+  let selectedAno = null; // clique numa coluna de "Acordos por ano"
 
-  function filteredAcordos() {
+  // filtrado por tudo, exceto o próprio ano — assim o gráfico "por ano"
+  // continua mostrando todas as colunas mesmo com um ano selecionado,
+  // em vez de sumir com as outras ao clicar numa
+  function filteredAcordosByFacets() {
     return acordos.filter((a) =>
       FILTER_FIELDS.every((f) => !filters[f.key].size || filters[f.key].has(a[f.field]))
     );
+  }
+
+  function filteredAcordos() {
+    return filteredAcordosByFacets().filter((a) => selectedAno == null || a.ano_inicio === selectedAno);
   }
 
   function toggleFilter(key, value) {
@@ -31,8 +39,14 @@
     renderAll();
   }
 
+  function toggleAno(ano) {
+    selectedAno = selectedAno === ano ? null : ano;
+    renderAll();
+  }
+
   function clearFilters() {
     FILTER_FIELDS.forEach((f) => filters[f.key].clear());
+    selectedAno = null;
     renderAll();
   }
 
@@ -47,7 +61,10 @@
 
     renderStats(computeStats(current));
     renderCountryBars(document.getElementById("bar-chart"), aggregateByPais(current), { continentColor });
-    renderComboChart(document.getElementById("combo-chart"), aggregateByAno(current));
+    renderComboChart(document.getElementById("combo-chart"), aggregateByAno(filteredAcordosByFacets()), {
+      activeAno: selectedAno,
+      onYearClick: toggleAno,
+    });
     renderGanttChart(document.getElementById("gantt-chart"), current, {
       continentColor,
       zoomControls: "#gantt-zoom",

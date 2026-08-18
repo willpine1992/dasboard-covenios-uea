@@ -37,26 +37,30 @@ function renderCountryBars(el, porPais, opts = {}) {
     .text((d) => truncateLabel(d.pais, 22));
 
   const barY = rowH * 0.45, barH = Math.max(5, rowH * 0.32);
+  const barW = (d) => Math.max(4, (d.n_acordos / maxV) * (width - 46));
+
   g.append("rect").attr("class", "bg")
     .attr("x", 0).attr("y", barY).attr("width", width).attr("height", barH).attr("rx", barH / 2);
 
   g.append("rect").attr("class", "fg")
     .attr("y", barY).attr("height", barH).attr("rx", barH / 2)
-    .attr("width", (d) => Math.max(4, (d.n_acordos / maxV) * (width - 46)))
-    .attr("x", (d) => width - Math.max(4, (d.n_acordos / maxV) * (width - 46)))
+    .attr("width", barW)
+    .attr("x", (d) => width - barW(d))
     .attr("fill", (d) => (continentColor ? continentColor.get(d.continente) : CHART_NODE_NEUTRAL))
     .on("mousemove", (ev, d) => showTooltip(ev.clientX, ev.clientY,
       `<b>${d.pais}</b><br>${d.continente}<br>${fmt(d.n_acordos)} acordo(s)`))
     .on("mouseleave", hideTooltip);
 
+  // valor no final da barra (ponta esquerda, já que ela cresce da direita
+  // pra esquerda) — acompanha o comprimento de cada barra, não fica fixo
   g.append("text").attr("class", "bar-value")
-    .attr("x", 0).attr("y", barY + barH / 2).attr("dy", "0.35em")
-    .attr("text-anchor", "start")
+    .attr("x", (d) => width - barW(d) - 8).attr("y", barY + barH / 2).attr("dy", "0.35em")
+    .attr("text-anchor", "end")
     .text((d) => fmt(d.n_acordos));
 }
 
 /* ---------------- Combo: acordos por ano + acumulado ---------------- */
-function renderComboChart(el, porAno) {
+function renderComboChart(el, porAno, opts = {}) {
   const container = d3.select(el);
   container.selectAll("*").remove();
   const width = el.clientWidth, height = el.clientHeight;
@@ -93,21 +97,21 @@ function renderComboChart(el, porAno) {
     .attr("x1", 0).attr("x2", innerW).attr("y1", innerH).attr("y2", innerH)
     .attr("stroke", "var(--border-hairline)");
 
-  // colunas: acordos novos no ano
+  // colunas: acordos novos no ano — clicáveis, filtram o painel por ano
   g.selectAll("rect.combo-bar")
     .data(porAno)
     .join("rect")
-    .attr("class", "combo-bar")
+    .attr("class", (d) => "combo-bar" + (opts.activeAno === d.ano ? " is-selected" : ""))
     .attr("x", (d) => x(d.ano))
     .attr("width", x.bandwidth())
     .attr("y", (d) => yBar(d.novos))
     .attr("height", (d) => innerH - yBar(d.novos))
     .attr("rx", 4)
-    .attr("fill", CHART_NODE_NEUTRAL)
-    .attr("opacity", 0.75)
+    .style("cursor", "pointer")
     .on("mousemove", (ev, d) => showTooltip(ev.clientX, ev.clientY,
-      `<b>${d.ano}</b><br>${fmt(d.novos)} acordo(s) novo(s)`))
-    .on("mouseleave", hideTooltip);
+      `<b>${d.ano}</b><br>${fmt(d.novos)} acordo(s) novo(s)<br><span class="muted text-xs">clique p/ filtrar</span>`))
+    .on("mouseleave", hideTooltip)
+    .on("click", (ev, d) => { opts.onYearClick && opts.onYearClick(d.ano); });
 
   g.selectAll("text.combo-bar-value")
     .data(porAno)
@@ -124,7 +128,7 @@ function renderComboChart(el, porAno) {
     .attr("class", "combo-line")
     .attr("d", line(porAno))
     .attr("fill", "none")
-    .attr("stroke", "var(--cat-2)")
+    .attr("stroke", "var(--ink-primary)")
     .attr("stroke-width", 2.4);
 
   g.selectAll("circle.combo-dot")
@@ -134,7 +138,7 @@ function renderComboChart(el, porAno) {
     .attr("cx", (d) => x(d.ano) + x.bandwidth() / 2)
     .attr("cy", (d) => yLine(d.acumulado))
     .attr("r", 4)
-    .attr("fill", "var(--cat-2)")
+    .attr("fill", "var(--ink-primary)")
     .attr("stroke", "var(--surface-panel)")
     .attr("stroke-width", 2)
     .on("mousemove", (ev, d) => showTooltip(ev.clientX, ev.clientY,
@@ -148,7 +152,7 @@ function renderComboChart(el, porAno) {
     .attr("x", (d) => x(d.ano) + x.bandwidth() / 2)
     .attr("y", (d) => yLine(d.acumulado) - 10)
     .attr("text-anchor", "middle")
-    .style("fill", "var(--cat-2)")
+    .style("fill", "var(--ink-primary)")
     .text((d) => fmt(d.acumulado));
 }
 
@@ -194,14 +198,24 @@ function renderGanttChart(el, acordos, opts = {}) {
   const x0 = d3.scaleTime().domain([new Date(+minDate - pad), new Date(+maxDate + pad)]).range([0, innerW]);
   const y = d3.scaleBand().domain(rows.map((_, i) => i)).range([0, innerH]).padding(0.32);
 
-  const svg = container.append("svg").attr("width", width).attr("height", height);
+  // eixo (datas) num SVG separado e FIXO no topo, fora da área com scroll —
+  // senão ele rola junto com as linhas e some de vista (ver .gantt-axis-wrap)
+  container.style("display", "flex").style("flex-direction", "column");
+  const axisWrap = container.append("div").attr("class", "gantt-axis-wrap");
+  const rowsWrap = container.append("div").attr("class", "gantt-rows-wrap");
+
+  const axisSvg = axisWrap.append("svg").attr("width", width).attr("height", margin.top);
+  const gAxis = axisSvg.append("g").attr("class", "gantt-axis").attr("transform", `translate(${margin.left},${margin.top - 10})`);
+  const todayLabel = axisSvg.append("text").attr("class", "gantt-today-label");
+
+  const svg = rowsWrap.append("svg").attr("width", width).attr("height", innerH);
 
   const clipId = "gantt-clip-" + Math.random().toString(36).slice(2, 9);
   svg.append("clipPath").attr("id", clipId)
     .append("rect").attr("width", innerW).attr("height", innerH);
 
   // coluna de rótulos (instituição · país) — fixa, não participa do zoom
-  const gLabels = svg.append("g").attr("transform", `translate(0,${margin.top})`);
+  const gLabels = svg.append("g");
   gLabels.selectAll("text.gantt-label")
     .data(rows)
     .join("text")
@@ -212,11 +226,11 @@ function renderGanttChart(el, acordos, opts = {}) {
     .attr("text-anchor", "end")
     .text(labelText);
 
-  // área do gráfico (eixo, barras, linha de hoje) — clipada e com zoom
-  const gPlot = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
-  const gAxis = svg.append("g").attr("class", "gantt-axis").attr("transform", `translate(${margin.left},${margin.top - 10})`);
+  // área do gráfico (barras, linha de hoje) — clipada e com zoom
+  const gPlot = svg.append("g").attr("transform", `translate(${margin.left},0)`);
   const gClip = gPlot.append("g").attr("clip-path", `url(#${clipId})`);
 
+  const oneDay = 86400000;
   const bars = gClip.selectAll("rect.gantt-bar")
     .data(rows)
     .join("rect")
@@ -225,21 +239,26 @@ function renderGanttChart(el, acordos, opts = {}) {
     .attr("height", y.bandwidth())
     .attr("rx", 5)
     .attr("fill", (d) => (continentColor ? continentColor.get(d.continente) : CHART_NODE_NEUTRAL))
-    .on("mousemove", (ev, d) => showTooltip(ev.clientX, ev.clientY,
-      `<b>${d.instituicao}</b><br>${d.pais} · ${d.continente}<br>` +
-      `${fmtDate(d.data_inicio)} – ${fmtDate(d.data_fim)}<br>${d.status}`))
+    .on("mousemove", (ev, d) => {
+      const diasRestantes = Math.round((new Date(d.data_fim) - today) / oneDay);
+      const vigenciaTxt = diasRestantes >= 0
+        ? `${fmt(diasRestantes)} dia(s) restante(s)`
+        : `expirado há ${fmt(Math.abs(diasRestantes))} dia(s)`;
+      showTooltip(ev.clientX, ev.clientY,
+        `<b>${d.instituicao}</b><br>${d.pais} · ${d.continente}<br>` +
+        `${fmtDate(d.data_inicio)} – ${fmtDate(d.data_fim)}<br>${d.status} · ${vigenciaTxt}`);
+    })
     .on("mouseleave", hideTooltip);
 
   const todayLine = gClip.append("line").attr("class", "gantt-today-line")
     .attr("y1", 0).attr("y2", innerH);
-  const todayLabel = gPlot.append("text").attr("class", "gantt-today-label").text("Hoje");
 
   function draw(xScale) {
     bars.attr("x", (d) => xScale(new Date(d.data_inicio)))
       .attr("width", (d) => Math.max(2, xScale(new Date(d.data_fim)) - xScale(new Date(d.data_inicio))));
     const tx = xScale(today);
     todayLine.attr("x1", tx).attr("x2", tx);
-    todayLabel.attr("x", tx + 4).attr("y", -16);
+    todayLabel.attr("x", margin.left + tx + 4).attr("y", margin.top - 20);
 
     const axis = d3.axisTop(xScale).ticks(Math.max(2, Math.round(innerW / 90))).tickSizeOuter(0);
     gAxis.call(axis);
@@ -248,6 +267,7 @@ function renderGanttChart(el, acordos, opts = {}) {
     gAxis.selectAll(".tick line").attr("stroke", "var(--border-hairline)");
   }
   draw(x0);
+  todayLabel.text("Hoje");
 
   // ---- zoom (só no eixo do tempo — rows continuam fixas, sem distorcer) ----
   const zoom = d3.zoom()

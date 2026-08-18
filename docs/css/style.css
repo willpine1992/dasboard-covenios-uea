@@ -420,10 +420,15 @@ h1, h2, h3 { color: var(--ink-primary); margin: 0; font-weight: 700; letter-spac
 .bar-value { font-family: var(--font); font-size: 10.5px; font-weight: 700; fill: var(--ink-primary); font-variant-numeric: tabular-nums; }
 
 /* ---------------- Combo chart (colunas + linha) ---------------- */
+.combo-bar { fill: var(--chart-seq-3); transition: fill var(--dur-fast) var(--ease); }
+.combo-bar:hover { fill: var(--chart-seq-4); }
+.combo-bar.is-selected { fill: var(--accent-strong); }
 .combo-bar-value { font-family: var(--font); font-size: 10px; font-weight: 700; fill: var(--ink-secondary); font-variant-numeric: tabular-nums; }
 .combo-line-value { font-family: var(--font); font-size: 10px; font-weight: 800; font-variant-numeric: tabular-nums; }
 
 /* ---------------- Gantt (vigência dos acordos) ---------------- */
+.gantt-axis-wrap { flex: none; }
+.gantt-rows-wrap { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
 .gantt-bar { cursor: pointer; opacity: 0.88; transition: opacity var(--dur-fast) var(--ease); }
 .gantt-bar:hover { opacity: 1; }
 .gantt-today-line { stroke: var(--accent-strong); stroke-width: 1.6px; stroke-dasharray: 4 3; }
