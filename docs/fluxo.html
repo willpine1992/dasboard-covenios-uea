@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <script>(function(){var t=localStorage.getItem('acordos-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);})();</script>
 <title>Mapa de Fluxo · Acordos Internacionais UEA</title>
-<link rel="stylesheet" href="css/style.css?v=4" />
+<link rel="stylesheet" href="css/style.css?v=5" />
 </head>
 <body>
 
@@ -25,6 +25,7 @@
     </button>
     <a href="index.html" class="topbar__link">Painel</a>
     <a href="fluxo.html" class="topbar__link is-active">Mapa de Fluxo</a>
+    <a href="https://willpine1992.github.io/dashboard-geral/docs/index.html" class="topbar__link" target="_blank" rel="noopener">Prospecção ↗</a>
   </nav>
 </header>
 
@@ -32,12 +33,9 @@
   <div class="flow-hero">
     <div>
       <h1>Acordos por continente</h1>
-      <p>Cada linha liga Manaus a um país com acordo bilateral vigente da UEA. Espessura e cor indicam o continente e o volume de acordos. Arraste para girar o globo e use o scroll para zoom.</p>
+      <p>Cada linha liga Manaus a um país com acordo bilateral vigente da UEA. Espessura e cor indicam o continente e o volume de acordos. Arraste para girar o globo, use o scroll para zoom, e clique numa linha ou ponto pra ver os convênios daquele país.</p>
     </div>
-    <div style="display:flex; align-items:center; gap:16px;">
-      <div class="flow-legend" id="continent-legend"></div>
-      <a class="btn btn--ghost" href="https://willpine1992.github.io/dashboard-geral/docs/index.html" target="_blank" rel="noopener">Prospecção ↗</a>
-    </div>
+    <div class="flow-legend" id="continent-legend"></div>
   </div>
 
   <div class="panel panel--flush flow-map-wrap">
@@ -45,13 +43,23 @@
   </div>
 </main>
 
+<div class="flow-detail" id="flow-detail">
+  <h3 id="fd-title">—</h3>
+  <div class="muted" id="fd-sub">—</div>
+  <div class="text-xs muted" style="margin:10px 0 8px; font-weight:700; text-transform:uppercase; letter-spacing:.05em;">Convênios</div>
+  <div class="picklist" id="fd-acordos" style="max-height:280px; margin-bottom:14px;"></div>
+  <div class="actions">
+    <button class="btn btn--ghost" id="fd-close">Fechar</button>
+  </div>
+</div>
+
 <footer class="site-credit">Powered by William Pinheiro</footer>
 
 <script src="lib/d3.v7.min.js"></script>
 <script src="lib/topojson-client.min.js"></script>
-<script src="js/common.js?v=4"></script>
-<script src="js/charts.js?v=4"></script>
-<script src="js/flowmap.js?v=4"></script>
-<script src="js/fluxo.js?v=4"></script>
+<script src="js/common.js?v=5"></script>
+<script src="js/charts.js?v=5"></script>
+<script src="js/flowmap.js?v=5"></script>
+<script src="js/fluxo.js?v=5"></script>
 </body>
 </html>

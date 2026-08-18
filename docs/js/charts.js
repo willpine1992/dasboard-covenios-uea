@@ -29,33 +29,37 @@ function renderCountryBars(el, porPais, opts = {}) {
     .attr("class", "bar-track")
     .attr("transform", (_, i) => `translate(0, ${i * rowH})`);
 
-  // invertido: rótulo e valor à ESQUERDA, barra cresce da direita pra
-  // esquerda (ancorada na borda direita do painel)
+  // invertido: rótulo à esquerda, barra cresce da direita pra esquerda,
+  // valor na OUTRA ponta (a fixa, à direita — por isso reserva uma faixa
+  // de espaço aí, senão o número cai em cima da própria barra)
   g.append("text")
     .attr("class", "bar-label")
     .attr("x", 0).attr("y", rowH * 0.32)
     .text((d) => truncateLabel(d.pais, 22));
 
   const barY = rowH * 0.45, barH = Math.max(5, rowH * 0.32);
-  const barW = (d) => Math.max(4, (d.n_acordos / maxV) * (width - 46));
+  const rightPad = 34;
+  const trackW = width - rightPad;
+  const barW = (d) => Math.max(4, (d.n_acordos / maxV) * (trackW - 46));
 
   g.append("rect").attr("class", "bg")
-    .attr("x", 0).attr("y", barY).attr("width", width).attr("height", barH).attr("rx", barH / 2);
+    .attr("x", 0).attr("y", barY).attr("width", trackW).attr("height", barH).attr("rx", barH / 2);
 
-  g.append("rect").attr("class", "fg")
+  g.append("rect").attr("class", (d) => "fg" + (opts.activePais === d.pais ? " is-selected" : ""))
     .attr("y", barY).attr("height", barH).attr("rx", barH / 2)
     .attr("width", barW)
-    .attr("x", (d) => width - barW(d))
+    .attr("x", (d) => trackW - barW(d))
     .attr("fill", (d) => (continentColor ? continentColor.get(d.continente) : CHART_NODE_NEUTRAL))
+    .style("cursor", "pointer")
     .on("mousemove", (ev, d) => showTooltip(ev.clientX, ev.clientY,
-      `<b>${d.pais}</b><br>${d.continente}<br>${fmt(d.n_acordos)} acordo(s)`))
-    .on("mouseleave", hideTooltip);
+      `<b>${d.pais}</b><br>${d.continente}<br>${fmt(d.n_acordos)} acordo(s)<br><span class="muted text-xs">clique p/ filtrar</span>`))
+    .on("mouseleave", hideTooltip)
+    .on("click", (ev, d) => { opts.onCountryClick && opts.onCountryClick(d.pais); });
 
-  // valor no final da barra (ponta esquerda, já que ela cresce da direita
-  // pra esquerda) — acompanha o comprimento de cada barra, não fica fixo
+  // valor na ponta fixa (direita) da barra
   g.append("text").attr("class", "bar-value")
-    .attr("x", (d) => width - barW(d) - 8).attr("y", barY + barH / 2).attr("dy", "0.35em")
-    .attr("text-anchor", "end")
+    .attr("x", trackW + 8).attr("y", barY + barH / 2).attr("dy", "0.35em")
+    .attr("text-anchor", "start")
     .text((d) => fmt(d.n_acordos));
 }
 

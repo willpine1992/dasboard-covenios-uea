@@ -415,7 +415,8 @@ h1, h2, h3 { color: var(--ink-primary); margin: 0; font-weight: 700; letter-spac
 .map-pin { transition: r var(--dur-fast) var(--ease); cursor: pointer; }
 
 .bar-track rect.bg { fill: var(--surface-alt); }
-.bar-track rect.fg { transition: width var(--dur-mid) var(--ease), x var(--dur-mid) var(--ease); cursor: pointer; }
+.bar-track rect.fg { transition: width var(--dur-mid) var(--ease), x var(--dur-mid) var(--ease), opacity var(--dur-fast) var(--ease); cursor: pointer; }
+.bar-track rect.fg.is-selected { stroke: var(--ink-primary); stroke-width: 2px; }
 .bar-label { font-family: var(--font); font-size: 11px; font-weight: 600; fill: var(--ink-secondary); }
 .bar-value { font-family: var(--font); font-size: 10.5px; font-weight: 700; fill: var(--ink-primary); font-variant-numeric: tabular-nums; }
 

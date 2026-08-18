@@ -20,19 +20,21 @@
   const filters = {};
   FILTER_FIELDS.forEach((f) => { filters[f.key] = new Set(); });
   let selectedAno = null; // clique numa coluna de "Acordos por ano"
+  let selectedPais = null; // clique numa barra de "Acordos por país"
 
-  // filtrado por tudo, exceto o próprio ano — assim o gráfico "por ano"
-  // continua mostrando todas as colunas mesmo com um ano selecionado,
-  // em vez de sumir com as outras ao clicar numa
-  function filteredAcordosByFacets() {
+  // filtrado por tudo, exceto o que estiver em `exclude` — assim cada
+  // gráfico "dono" de um filtro por-clique (ano/país) continua mostrando
+  // todas as suas próprias opções mesmo com uma selecionada, em vez de
+  // sumir com o resto ao clicar numa
+  function filteredExcept(exclude) {
     return acordos.filter((a) =>
-      FILTER_FIELDS.every((f) => !filters[f.key].size || filters[f.key].has(a[f.field]))
+      FILTER_FIELDS.every((f) => !filters[f.key].size || filters[f.key].has(a[f.field])) &&
+      (exclude === "ano" || selectedAno == null || a.ano_inicio === selectedAno) &&
+      (exclude === "pais" || selectedPais == null || a.pais === selectedPais)
     );
   }
 
-  function filteredAcordos() {
-    return filteredAcordosByFacets().filter((a) => selectedAno == null || a.ano_inicio === selectedAno);
-  }
+  function filteredAcordos() { return filteredExcept(null); }
 
   function toggleFilter(key, value) {
     filters[key].has(value) ? filters[key].delete(value) : filters[key].add(value);
@@ -44,11 +46,19 @@
     renderAll();
   }
 
+  function togglePais(pais) {
+    selectedPais = selectedPais === pais ? null : pais;
+    renderAll();
+  }
+
   function clearFilters() {
     FILTER_FIELDS.forEach((f) => filters[f.key].clear());
     selectedAno = null;
+    selectedPais = null;
     renderAll();
   }
+
+  d3.select("#btn-clear-filters-top").on("click", clearFilters);
 
   renderFilterPanel();
   renderAll();
@@ -60,8 +70,12 @@
     const current = filteredAcordos();
 
     renderStats(computeStats(current));
-    renderCountryBars(document.getElementById("bar-chart"), aggregateByPais(current), { continentColor });
-    renderComboChart(document.getElementById("combo-chart"), aggregateByAno(filteredAcordosByFacets()), {
+    renderCountryBars(document.getElementById("bar-chart"), aggregateByPais(filteredExcept("pais")), {
+      continentColor,
+      activePais: selectedPais,
+      onCountryClick: togglePais,
+    });
+    renderComboChart(document.getElementById("combo-chart"), aggregateByAno(filteredExcept("ano")), {
       activeAno: selectedAno,
       onYearClick: toggleAno,
     });

@@ -1,7 +1,7 @@
 /* ==========================================================================
    Acordos Internacionais — globo 3D: Manaus -> países parceiros, por continente
    ========================================================================== */
-function initFlowGlobe(el, { paisesGeo, manaus, continentColor, world }) {
+function initFlowGlobe(el, { paisesGeo, manaus, continentColor, world, onSelect }) {
   const destinos = paisesGeo.filter((d) => d.lat != null && d.lon != null);
 
   const maxV = d3.max(destinos, (d) => d.n_acordos) || 1;
@@ -15,6 +15,7 @@ function initFlowGlobe(el, { paisesGeo, manaus, continentColor, world }) {
   let projection, path, baseScale, minScale, maxScale;
   let svg, arcs, dots, originG, originLabel;
   let justDragged = false;
+  let active = null; // país selecionado (persiste entre rebuilds: resize/tema)
 
   build();
   window.addEventListener("resize", debounce(build, 200));
@@ -40,7 +41,8 @@ function initFlowGlobe(el, { paisesGeo, manaus, continentColor, world }) {
     maxScale = baseScale * 5;
 
     svg = d3.select(el).append("svg").attr("width", width).attr("height", height)
-      .attr("class", "flow-globe");
+      .attr("class", "flow-globe")
+      .on("click", () => { if (!justDragged) setActive(null); });
 
     svg.append("path").attr("class", "map-sphere");
     svg.append("path").attr("class", "map-graticule");
@@ -89,17 +91,32 @@ function initFlowGlobe(el, { paisesGeo, manaus, continentColor, world }) {
           `<b>${d.pais}</b><br>${d.continente}<br>${fmt(d.n_acordos)} acordo(s) · ${fmt(d.n_ativos)} vigente(s)`);
         ev.stopPropagation();
       })
-      .on("mouseleave", hideTooltip);
+      .on("mouseleave", hideTooltip)
+      .on("click", (ev, d) => { ev.stopPropagation(); setActive(d); });
     dots
       .on("mousemove", (ev, d) => {
         showTooltip(ev.clientX, ev.clientY,
           `<b>${d.pais}</b><br>${d.continente}<br>${fmt(d.n_acordos)} acordo(s) · ${fmt(d.n_ativos)} vigente(s)`);
         ev.stopPropagation();
       })
-      .on("mouseleave", hideTooltip);
+      .on("mouseleave", hideTooltip)
+      .on("click", (ev, d) => { ev.stopPropagation(); setActive(d); });
 
     attachInteraction();
     redraw();
+    highlight();
+  }
+
+  function setActive(d) {
+    active = d;
+    highlight();
+    onSelect && onSelect(active);
+  }
+
+  function highlight() {
+    if (!arcs) return;
+    arcs.classed("is-dim", (d) => active && d.pais !== active.pais);
+    dots.attr("opacity", (d) => (!active || d.pais === active.pais ? 1 : 0.25));
   }
 
   function attachInteraction() {
@@ -159,6 +176,8 @@ function initFlowGlobe(el, { paisesGeo, manaus, continentColor, world }) {
     const n = Math.max(2, Math.round(dist / 0.02));
     return d3.range(0, n + 1).map((i) => interp(i / n));
   }
+
+  return { setActive };
 }
 
 let _worldCache = null;
