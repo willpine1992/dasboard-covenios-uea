@@ -21,6 +21,7 @@
   FILTER_FIELDS.forEach((f) => { filters[f.key] = new Set(); });
   let selectedAno = null; // clique numa coluna de "Acordos por ano"
   let selectedPais = null; // clique numa barra de "Acordos por país"
+  let showBars = true, showLine = true; // toggle de séries do combo chart
 
   // filtrado por tudo, exceto o que estiver em `exclude` — assim cada
   // gráfico "dono" de um filtro por-clique (ano/país) continua mostrando
@@ -61,6 +62,7 @@
   d3.select("#btn-clear-filters-top").on("click", clearFilters);
 
   renderFilterPanel();
+  renderSeriesToggle();
   renderAll();
 
   window.addEventListener("acordos:themechange", renderAll);
@@ -78,6 +80,8 @@
     renderComboChart(document.getElementById("combo-chart"), aggregateByAno(filteredExcept("ano")), {
       activeAno: selectedAno,
       onYearClick: toggleAno,
+      showBars,
+      showLine,
     });
     renderGanttChart(document.getElementById("gantt-chart"), current, {
       continentColor,
@@ -111,6 +115,19 @@
       rows.html((d) => `<input type="checkbox" /><span>${d}</span><small data-count></small>`);
       rows.select("input").on("change", (_, d) => toggleFilter(f.key, d));
     }
+  }
+
+  function renderSeriesToggle() {
+    const items = [
+      { key: "bars", label: "Colunas", color: "var(--chart-seq-4)", get: () => showBars, set: (v) => { showBars = v; } },
+      { key: "line", label: "Linha", color: "var(--ink-primary)", get: () => showLine, set: (v) => { showLine = v; } },
+    ];
+    const wrap = d3.select("#combo-series-toggle");
+    const chips = wrap.selectAll(".series-toggle__item").data(items, (d) => d.key).join("div")
+      .attr("class", "series-toggle__item")
+      .on("click", (_, d) => { d.set(!d.get()); renderSeriesToggle(); renderAll(); });
+    chips.classed("is-off", (d) => !d.get());
+    chips.html((d) => `<span class="series-toggle__dot" style="background:${d.color}"></span>${d.label}`);
   }
 
   function renderFilterCounts(current) {

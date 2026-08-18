@@ -440,6 +440,19 @@ h1, h2, h3 { color: var(--ink-primary); margin: 0; font-weight: 700; letter-spac
 .gantt-toolbar { display: flex; gap: 6px; align-items: center; }
 .gantt-zoom-btn { padding: 4px 10px; font-size: 11px; border-radius: var(--radius-sm); }
 
+.series-toggle { display: flex; gap: 6px; align-items: center; }
+.series-toggle__item {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 10.5px; font-weight: 700; color: var(--ink-secondary);
+  background: var(--surface-alt); border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-pill); padding: 4px 10px 4px 8px;
+  cursor: pointer; user-select: none; transition: all var(--dur-fast) var(--ease);
+}
+.series-toggle__item:hover { border-color: var(--border-strong); }
+.series-toggle__dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.series-toggle__item.is-off { color: var(--ink-muted); opacity: 0.55; }
+.series-toggle__item.is-off .series-toggle__dot { opacity: 0.4; }
+
 /* ==========================================================================
    Página 2 — Flow map
    ========================================================================== */

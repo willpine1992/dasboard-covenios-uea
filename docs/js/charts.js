@@ -101,63 +101,76 @@ function renderComboChart(el, porAno, opts = {}) {
     .attr("x1", 0).attr("x2", innerW).attr("y1", innerH).attr("y2", innerH)
     .attr("stroke", "var(--border-hairline)");
 
-  // colunas: acordos novos no ano — clicáveis, filtram o painel por ano
-  g.selectAll("rect.combo-bar")
-    .data(porAno)
-    .join("rect")
-    .attr("class", (d) => "combo-bar" + (opts.activeAno === d.ano ? " is-selected" : ""))
-    .attr("x", (d) => x(d.ano))
-    .attr("width", x.bandwidth())
-    .attr("y", (d) => yBar(d.novos))
-    .attr("height", (d) => innerH - yBar(d.novos))
-    .attr("rx", 4)
-    .style("cursor", "pointer")
-    .on("mousemove", (ev, d) => showTooltip(ev.clientX, ev.clientY,
-      `<b>${d.ano}</b><br>${fmt(d.novos)} acordo(s) novo(s)<br><span class="muted text-xs">clique p/ filtrar</span>`))
-    .on("mouseleave", hideTooltip)
-    .on("click", (ev, d) => { opts.onYearClick && opts.onYearClick(d.ano); });
+  const showBars = opts.showBars !== false;
+  const showLine = opts.showLine !== false;
 
-  g.selectAll("text.combo-bar-value")
-    .data(porAno)
-    .join("text")
-    .attr("class", "combo-bar-value")
-    .attr("x", (d) => x(d.ano) + x.bandwidth() / 2)
-    .attr("y", (d) => yBar(d.novos) - 6)
-    .attr("text-anchor", "middle")
-    .text((d) => fmt(d.novos));
+  // colunas: acordos novos no ano — clicáveis, filtram o painel por ano
+  if (showBars) {
+    g.selectAll("rect.combo-bar")
+      .data(porAno)
+      .join("rect")
+      .attr("class", (d) => "combo-bar" + (opts.activeAno === d.ano ? " is-selected" : ""))
+      .attr("x", (d) => x(d.ano))
+      .attr("width", x.bandwidth())
+      .attr("y", (d) => yBar(d.novos))
+      .attr("height", (d) => innerH - yBar(d.novos))
+      .attr("rx", 4)
+      .style("cursor", "pointer")
+      .on("mousemove", (ev, d) => showTooltip(ev.clientX, ev.clientY,
+        `<b>${d.ano}</b><br>${fmt(d.novos)} acordo(s) novo(s)<br><span class="muted text-xs">clique p/ filtrar</span>`))
+      .on("mouseleave", hideTooltip)
+      .on("click", (ev, d) => { opts.onYearClick && opts.onYearClick(d.ano); });
+
+    g.selectAll("text.combo-bar-value")
+      .data(porAno)
+      .join("text")
+      .attr("class", "combo-bar-value")
+      .attr("x", (d) => x(d.ano) + x.bandwidth() / 2)
+      .attr("y", (d) => yBar(d.novos) - 6)
+      .attr("text-anchor", "middle")
+      .text((d) => fmt(d.novos));
+  }
 
   // linha: acumulado
-  const line = d3.line().x((d) => x(d.ano) + x.bandwidth() / 2).y((d) => yLine(d.acumulado)).curve(d3.curveMonotoneX);
-  g.append("path")
-    .attr("class", "combo-line")
-    .attr("d", line(porAno))
-    .attr("fill", "none")
-    .attr("stroke", "var(--ink-primary)")
-    .attr("stroke-width", 2.4);
+  if (showLine) {
+    const line = d3.line().x((d) => x(d.ano) + x.bandwidth() / 2).y((d) => yLine(d.acumulado)).curve(d3.curveMonotoneX);
+    g.append("path")
+      .attr("class", "combo-line")
+      .attr("d", line(porAno))
+      .attr("fill", "none")
+      .attr("stroke", "var(--ink-primary)")
+      .attr("stroke-width", 2.4);
 
-  g.selectAll("circle.combo-dot")
-    .data(porAno)
-    .join("circle")
-    .attr("class", "combo-dot")
-    .attr("cx", (d) => x(d.ano) + x.bandwidth() / 2)
-    .attr("cy", (d) => yLine(d.acumulado))
-    .attr("r", 4)
-    .attr("fill", "var(--ink-primary)")
-    .attr("stroke", "var(--surface-panel)")
-    .attr("stroke-width", 2)
-    .on("mousemove", (ev, d) => showTooltip(ev.clientX, ev.clientY,
-      `<b>${d.ano}</b><br>${fmt(d.acumulado)} acordo(s) acumulado(s)`))
-    .on("mouseleave", hideTooltip);
+    g.selectAll("circle.combo-dot")
+      .data(porAno)
+      .join("circle")
+      .attr("class", "combo-dot")
+      .attr("cx", (d) => x(d.ano) + x.bandwidth() / 2)
+      .attr("cy", (d) => yLine(d.acumulado))
+      .attr("r", 4)
+      .attr("fill", "var(--ink-primary)")
+      .attr("stroke", "var(--surface-panel)")
+      .attr("stroke-width", 2)
+      .on("mousemove", (ev, d) => showTooltip(ev.clientX, ev.clientY,
+        `<b>${d.ano}</b><br>${fmt(d.acumulado)} acordo(s) acumulado(s)`))
+      .on("mouseleave", hideTooltip);
 
-  g.selectAll("text.combo-line-value")
-    .data(porAno)
-    .join("text")
-    .attr("class", "combo-line-value")
-    .attr("x", (d) => x(d.ano) + x.bandwidth() / 2)
-    .attr("y", (d) => yLine(d.acumulado) - 10)
-    .attr("text-anchor", "middle")
-    .style("fill", "var(--ink-primary)")
-    .text((d) => fmt(d.acumulado));
+    g.selectAll("text.combo-line-value")
+      .data(porAno)
+      .join("text")
+      .attr("class", "combo-line-value")
+      .attr("x", (d) => x(d.ano) + x.bandwidth() / 2)
+      .attr("y", (d) => yLine(d.acumulado) - 10)
+      .attr("text-anchor", "middle")
+      .style("fill", "var(--ink-primary)")
+      .text((d) => fmt(d.acumulado));
+  }
+
+  if (!showBars && !showLine) {
+    g.append("text").attr("class", "empty-hint")
+      .attr("x", innerW / 2).attr("y", innerH / 2).attr("text-anchor", "middle")
+      .text("Nenhuma série ativa.");
+  }
 }
 
 function truncateLabel(s, n) { return s.length > n ? s.slice(0, n - 1) + "…" : s; }
