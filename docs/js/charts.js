@@ -153,3 +153,122 @@ function renderComboChart(el, porAno) {
 }
 
 function truncateLabel(s, n) { return s.length > n ? s.slice(0, n - 1) + "…" : s; }
+
+/* ---------------- Gantt: vigência dos acordos ---------------- */
+function renderGanttChart(el, acordos, opts = {}) {
+  const container = d3.select(el);
+  container.selectAll("*").remove();
+  const width = el.clientWidth;
+  if (!acordos.length || width < 10) {
+    container.append("div").attr("class", "empty-hint").text("Sem dados.");
+    return;
+  }
+
+  const continentColor = opts.continentColor;
+  const rows = [...acordos].sort((a, b) => new Date(a.data_inicio) - new Date(b.data_inicio));
+
+  const margin = { top: 34, right: 20, bottom: 6, left: 240 };
+  const rowH = opts.rowHeight || 24;
+  const innerH = rows.length * rowH;
+  const innerW = width - margin.left - margin.right;
+  const height = innerH + margin.top + margin.bottom;
+
+  const today = new Date();
+  const minDate = d3.min(rows, (d) => new Date(d.data_inicio));
+  const maxDate = d3.max(rows, (d) => new Date(d.data_fim));
+  const pad = (maxDate - minDate) * 0.03;
+  const x0 = d3.scaleTime().domain([new Date(+minDate - pad), new Date(+maxDate + pad)]).range([0, innerW]);
+  const y = d3.scaleBand().domain(rows.map((_, i) => i)).range([0, innerH]).padding(0.32);
+
+  const svg = container.append("svg").attr("width", width).attr("height", height);
+
+  const clipId = "gantt-clip-" + Math.random().toString(36).slice(2, 9);
+  svg.append("clipPath").attr("id", clipId)
+    .append("rect").attr("width", innerW).attr("height", innerH);
+
+  // coluna de rótulos (instituição · país) — fixa, não participa do zoom
+  const gLabels = svg.append("g").attr("transform", `translate(0,${margin.top})`);
+  gLabels.selectAll("text.gantt-label")
+    .data(rows)
+    .join("text")
+    .attr("class", "bar-label gantt-label")
+    .attr("x", margin.left - 10)
+    .attr("y", (_, i) => y(i) + y.bandwidth() / 2)
+    .attr("dy", "0.35em")
+    .attr("text-anchor", "end")
+    .text((d) => truncateLabel(`${d.instituicao} · ${d.pais}`, 30));
+
+  // área do gráfico (eixo, barras, linha de hoje) — clipada e com zoom
+  const gPlot = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+  const gAxis = svg.append("g").attr("class", "gantt-axis").attr("transform", `translate(${margin.left},${margin.top - 10})`);
+  const gClip = gPlot.append("g").attr("clip-path", `url(#${clipId})`);
+
+  const bars = gClip.selectAll("rect.gantt-bar")
+    .data(rows)
+    .join("rect")
+    .attr("class", "gantt-bar")
+    .attr("y", (_, i) => y(i))
+    .attr("height", y.bandwidth())
+    .attr("rx", 5)
+    .attr("fill", (d) => (continentColor ? continentColor.get(d.continente) : CHART_NODE_NEUTRAL))
+    .on("mousemove", (ev, d) => showTooltip(ev.clientX, ev.clientY,
+      `<b>${d.instituicao}</b><br>${d.pais} · ${d.continente}<br>` +
+      `${fmtDate(d.data_inicio)} – ${fmtDate(d.data_fim)}<br>${d.status}`))
+    .on("mouseleave", hideTooltip);
+
+  const todayLine = gClip.append("line").attr("class", "gantt-today-line")
+    .attr("y1", 0).attr("y2", innerH);
+  const todayLabel = gPlot.append("text").attr("class", "gantt-today-label").text("Hoje");
+
+  function draw(xScale) {
+    bars.attr("x", (d) => xScale(new Date(d.data_inicio)))
+      .attr("width", (d) => Math.max(2, xScale(new Date(d.data_fim)) - xScale(new Date(d.data_inicio))));
+    const tx = xScale(today);
+    todayLine.attr("x1", tx).attr("x2", tx);
+    todayLabel.attr("x", tx + 4).attr("y", -16);
+
+    const axis = d3.axisTop(xScale).ticks(Math.max(2, Math.round(innerW / 90))).tickSizeOuter(0);
+    gAxis.call(axis);
+    gAxis.selectAll("text").attr("class", "bar-label");
+    gAxis.select(".domain").attr("stroke", "var(--border-hairline)");
+    gAxis.selectAll(".tick line").attr("stroke", "var(--border-hairline)");
+  }
+  draw(x0);
+
+  // ---- zoom (só no eixo do tempo — rows continuam fixas, sem distorcer) ----
+  const zoom = d3.zoom()
+    .scaleExtent([1, 30])
+    .translateExtent([[0, 0], [innerW, 0]])
+    .extent([[0, 0], [innerW, innerH]])
+    .on("zoom", (ev) => draw(ev.transform.rescaleX(x0)));
+
+  const zoomCatcher = gPlot.append("rect")
+    .attr("class", "gantt-zoom-catcher")
+    .attr("width", innerW).attr("height", innerH)
+    .attr("fill", "transparent")
+    .call(zoom);
+
+  if (opts.zoomControls) {
+    d3.select(opts.zoomControls).html("");
+    const bar = d3.select(opts.zoomControls);
+    bar.append("button").attr("class", "btn btn--ghost gantt-zoom-btn").text("−")
+      .on("click", () => zoomCatcher.transition().duration(200).call(zoom.scaleBy, 0.7));
+    bar.append("button").attr("class", "btn btn--ghost gantt-zoom-btn").text("Hoje")
+      .on("click", () => {
+        const span = maxDate - minDate;
+        const k = Math.max(1, span / (today - minDate + span * 0.05) * 3);
+        const tx = -x0(today) * k + innerW / 2;
+        zoomCatcher.transition().duration(300).call(zoom.transform, d3.zoomIdentity.translate(tx, 0).scale(k));
+      });
+    bar.append("button").attr("class", "btn btn--ghost gantt-zoom-btn").text("+")
+      .on("click", () => zoomCatcher.transition().duration(200).call(zoom.scaleBy, 1.4));
+    bar.append("button").attr("class", "btn btn--ghost gantt-zoom-btn").text("Reset")
+      .on("click", () => zoomCatcher.transition().duration(200).call(zoom.transform, d3.zoomIdentity));
+  }
+}
+
+function fmtDate(iso) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  return d.toLocaleDateString("pt-BR");
+}

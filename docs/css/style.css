@@ -415,6 +415,17 @@ h1, h2, h3 { color: var(--ink-primary); margin: 0; font-weight: 700; letter-spac
 .combo-bar-value { font-family: var(--font); font-size: 10px; font-weight: 700; fill: var(--ink-secondary); font-variant-numeric: tabular-nums; }
 .combo-line-value { font-family: var(--font); font-size: 10px; font-weight: 800; font-variant-numeric: tabular-nums; }
 
+/* ---------------- Gantt (vigência dos acordos) ---------------- */
+.gantt-bar { cursor: pointer; opacity: 0.88; transition: opacity var(--dur-fast) var(--ease); }
+.gantt-bar:hover { opacity: 1; }
+.gantt-today-line { stroke: var(--accent-strong); stroke-width: 1.6px; stroke-dasharray: 4 3; }
+.gantt-today-label { font-family: var(--font); font-size: 10px; font-weight: 800; fill: var(--accent-strong); }
+.gantt-axis .domain { stroke: var(--border-hairline); }
+.gantt-zoom-catcher { cursor: grab; }
+.gantt-zoom-catcher:active { cursor: grabbing; }
+.gantt-toolbar { display: flex; gap: 6px; align-items: center; }
+.gantt-zoom-btn { padding: 4px 10px; font-size: 11px; border-radius: var(--radius-sm); }
+
 /* ==========================================================================
    Página 2 — Flow map
    ========================================================================== */

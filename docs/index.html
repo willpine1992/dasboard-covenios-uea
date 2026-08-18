@@ -23,6 +23,8 @@
       <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
       <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
     </button>
+    <a href="index.html" class="topbar__link is-active">Painel</a>
+    <a href="fluxo.html" class="topbar__link">Mapa de Fluxo</a>
   </nav>
 </header>
 
@@ -55,13 +57,13 @@
     </div>
   </div>
 
-  <!-- ===================== Mapa de fluxo ===================== -->
+  <!-- ===================== Gantt: vigência dos acordos ===================== -->
   <div class="panel panel--flush" style="display:flex; flex-direction:column;">
     <div class="panel__header" style="padding:14px 16px 0;">
-      <span class="panel__title">Acordos por continente — fluxo Manaus × mundo</span>
-      <span class="flow-legend" id="continent-legend"></span>
+      <span class="panel__title">Vigência dos acordos</span>
+      <span class="gantt-toolbar" id="gantt-zoom"></span>
     </div>
-    <div style="flex:1; min-height:0;" id="flow-chart"></div>
+    <div style="flex:1; min-height:0; overflow-y:auto;" id="gantt-chart"></div>
   </div>
 
 </main>
@@ -69,10 +71,8 @@
 <footer class="site-credit">Powered by William Pinheiro</footer>
 
 <script src="lib/d3.v7.min.js"></script>
-<script src="lib/topojson-client.min.js"></script>
-<script src="js/common.js?v=1"></script>
-<script src="js/charts.js?v=1"></script>
-<script src="js/flowmap.js?v=1"></script>
-<script src="js/main.js?v=1"></script>
+<script src="js/common.js?v=2"></script>
+<script src="js/charts.js?v=2"></script>
+<script src="js/main.js?v=2"></script>
 </body>
 </html>
