@@ -246,9 +246,17 @@ html, body {
 }
 .acordos-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; min-height: 0; }
 .acordos-row .panel { min-height: 0; }
+.acordos-row--filters { grid-template-columns: 220px 1fr 1fr; }
+
+.filter-group { display: flex; flex-direction: column; gap: 6px; }
+.filter-group__title {
+  font-size: 10.5px; font-weight: 700; color: var(--ink-muted);
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+
 @media (max-width: 980px) {
   .layout--acordos { height: auto; overflow: visible; }
-  .acordos-row { grid-template-columns: 1fr; }
+  .acordos-row, .acordos-row--filters { grid-template-columns: 1fr; }
   .stat-row { flex-wrap: wrap; }
   .stat-row .stat-tile { min-width: 140px; }
 }

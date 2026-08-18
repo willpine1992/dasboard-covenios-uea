@@ -41,8 +41,16 @@
     </div>
   </div>
 
-  <!-- ===================== Barras + Combo ===================== -->
-  <div class="acordos-row">
+  <!-- ===================== Filtros + Barras + Combo ===================== -->
+  <div class="acordos-row acordos-row--filters">
+    <div class="panel">
+      <div class="panel__header">
+        <span class="panel__title">Filtros</span>
+        <span class="panel__hint" id="filter-count-hint"></span>
+      </div>
+      <div class="panel__body" id="filters-panel" style="height:calc(100% - 30px); overflow-y:auto; display:flex; flex-direction:column; gap:14px;"></div>
+    </div>
+
     <div class="panel">
       <div class="panel__header"><span class="panel__title">Acordos por país</span></div>
       <div class="panel__body" id="bar-chart" style="height:calc(100% - 30px); overflow-y:auto;"></div>

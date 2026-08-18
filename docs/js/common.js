@@ -81,6 +81,45 @@ function buildContinentColorScale(items, keyFn) {
   return scale;
 }
 
+/* ---------- agregações derivadas de "acordos" (recalculadas a cada filtro) ---------- */
+function aggregateByPais(acordos) {
+  const map = new Map();
+  for (const a of acordos) {
+    if (!map.has(a.pais)) map.set(a.pais, { pais: a.pais, continente: a.continente, n_acordos: 0, n_ativos: 0 });
+    const e = map.get(a.pais);
+    e.n_acordos += 1;
+    if (a.ativo) e.n_ativos += 1;
+  }
+  return [...map.values()].sort((a, b) => b.n_acordos - a.n_acordos);
+}
+
+function aggregateByAno(acordos) {
+  const counts = new Map();
+  for (const a of acordos) {
+    if (a.ano_inicio == null) continue;
+    counts.set(a.ano_inicio, (counts.get(a.ano_inicio) || 0) + 1);
+  }
+  const anos = [...counts.keys()].sort((a, b) => a - b);
+  let acumulado = 0;
+  return anos.map((ano) => {
+    acumulado += counts.get(ano);
+    return { ano, novos: counts.get(ano), acumulado };
+  });
+}
+
+function computeStats(acordos) {
+  const paises = new Set(acordos.map((a) => a.pais));
+  const instituicoes = new Set(acordos.map((a) => a.instituicao));
+  const ativos = acordos.filter((a) => a.ativo).length;
+  return {
+    total_paises: paises.size,
+    total_acordos: acordos.length,
+    ativos,
+    expirados: acordos.length - ativos,
+    instituicoes: instituicoes.size,
+  };
+}
+
 /* ---------- tooltip global ---------- */
 let tooltipEl = null;
 function ensureTooltip() {

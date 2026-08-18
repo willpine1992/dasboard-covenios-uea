@@ -53,7 +53,7 @@ def main() -> None:
         """SELECT ID_Acordo, Instituicao_Parceira, Pais, Continente, Tipo_Acordo,
                   Ano_Inicio, Ano_Fim, Status_Vigencia_Referencia,
                   Faixa_Vencimento, Data_Assinatura, Data_Inicio, Data_Fim,
-                  Prazo_Indeterminado
+                  Prazo_Indeterminado, Abrangencia, Status_Validacao_ARI
            FROM acordos_fato_acordos"""
     ).fetchall()
     conn.close()
@@ -86,6 +86,8 @@ def main() -> None:
             "data_inicio": r["Data_Inicio"],
             "data_fim": r["Data_Fim"],
             "prazo_indeterminado": (r["Prazo_Indeterminado"] or "").strip() == "Sim",
+            "abrangencia": r["Abrangencia"],
+            "status_validacao_ari": r["Status_Validacao_ARI"],
         })
 
         pais_entry = by_pais.setdefault(r["Pais"], {"pais": r["Pais"], "continente": r["Continente"], "n_acordos": 0, "n_ativos": 0})

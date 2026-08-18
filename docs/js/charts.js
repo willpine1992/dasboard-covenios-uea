@@ -166,8 +166,22 @@ function renderGanttChart(el, acordos, opts = {}) {
 
   const continentColor = opts.continentColor;
   const rows = [...acordos].sort((a, b) => new Date(a.data_inicio) - new Date(b.data_inicio));
+  const labelText = (d) => `${d.instituicao} · ${d.pais}`;
 
-  const margin = { top: 34, right: 20, bottom: 6, left: 240 };
+  // mede a largura real do maior rótulo pra reservar coluna suficiente e
+  // mostrar o nome completo da instituição, em vez de truncar num valor
+  // fixo de caracteres (nomes variam muito de tamanho)
+  const measureSvg = container.append("svg").style("position", "absolute").style("visibility", "hidden");
+  const measureText = measureSvg.append("text").attr("class", "bar-label");
+  let maxLabelW = 0;
+  for (const d of rows) {
+    measureText.text(labelText(d));
+    maxLabelW = Math.max(maxLabelW, measureText.node().getComputedTextLength());
+  }
+  measureSvg.remove();
+
+  const left = Math.min(Math.max(140, width * 0.5), maxLabelW + 26);
+  const margin = { top: 34, right: 20, bottom: 6, left };
   const rowH = opts.rowHeight || 24;
   const innerH = rows.length * rowH;
   const innerW = width - margin.left - margin.right;
@@ -196,7 +210,7 @@ function renderGanttChart(el, acordos, opts = {}) {
     .attr("y", (_, i) => y(i) + y.bandwidth() / 2)
     .attr("dy", "0.35em")
     .attr("text-anchor", "end")
-    .text((d) => truncateLabel(`${d.instituicao} · ${d.pais}`, 30));
+    .text(labelText);
 
   // área do gráfico (eixo, barras, linha de hoje) — clipada e com zoom
   const gPlot = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);

@@ -3,32 +3,96 @@
    ========================================================================== */
 (async function () {
   const data = await loadData();
-  const { stats, por_pais, por_ano, acordos } = data;
+  const { acordos } = data;
 
   initThemeToggle();
 
-  const continentColor = buildContinentColorScale(por_pais, (d) => d.continente);
+  // cor por continente calculada sobre a base inteira, pra não mudar de
+  // cor conforme os filtros são aplicados
+  const continentColor = buildContinentColorScale(acordos, (d) => d.continente);
 
-  renderStats();
+  const FILTER_FIELDS = [
+    { key: "abrangencia", field: "abrangencia", label: "Abrangência" },
+    { key: "statusAri", field: "status_validacao_ari", label: "Status de validação (ARI)" },
+    { key: "continente", field: "continente", label: "Continente" },
+    { key: "tipo", field: "tipo", label: "Tipo de acordo" },
+  ];
+  const filters = {};
+  FILTER_FIELDS.forEach((f) => { filters[f.key] = new Set(); });
+
+  function filteredAcordos() {
+    return acordos.filter((a) =>
+      FILTER_FIELDS.every((f) => !filters[f.key].size || filters[f.key].has(a[f.field]))
+    );
+  }
+
+  function toggleFilter(key, value) {
+    filters[key].has(value) ? filters[key].delete(value) : filters[key].add(value);
+    renderAll();
+  }
+
+  function clearFilters() {
+    FILTER_FIELDS.forEach((f) => filters[f.key].clear());
+    renderAll();
+  }
+
+  renderFilterPanel();
   renderAll();
 
   window.addEventListener("acordos:themechange", renderAll);
   window.addEventListener("resize", debounce(renderAll, 200));
 
   function renderAll() {
-    renderCountryBars(document.getElementById("bar-chart"), por_pais, { continentColor });
-    renderComboChart(document.getElementById("combo-chart"), por_ano);
-    renderGanttChart(document.getElementById("gantt-chart"), acordos, {
+    const current = filteredAcordos();
+
+    renderStats(computeStats(current));
+    renderCountryBars(document.getElementById("bar-chart"), aggregateByPais(current), { continentColor });
+    renderComboChart(document.getElementById("combo-chart"), aggregateByAno(current));
+    renderGanttChart(document.getElementById("gantt-chart"), current, {
       continentColor,
       zoomControls: "#gantt-zoom",
     });
+    renderFilterCounts(current);
   }
 
-  function renderStats() {
+  function renderStats(stats) {
     d3.select("#stat-paises").text(fmt(stats.total_paises));
     d3.select("#stat-acordos").text(fmt(stats.total_acordos));
     d3.select("#stat-ativos").text(fmt(stats.ativos));
     d3.select("#stat-expirados").text(fmt(stats.expirados));
     d3.select("#stat-instituicoes").text(fmt(stats.instituicoes));
+  }
+
+  function renderFilterPanel() {
+    const wrap = d3.select("#filters-panel");
+    wrap.html("");
+
+    const clearRow = wrap.append("div");
+    clearRow.append("button").attr("class", "btn btn--ghost gantt-zoom-btn").text("Limpar filtros")
+      .on("click", clearFilters);
+
+    for (const f of FILTER_FIELDS) {
+      const options = [...new Set(acordos.map((a) => a[f.field]).filter((v) => v != null && v !== ""))].sort();
+      const group = wrap.append("div").attr("class", "filter-group");
+      group.append("div").attr("class", "filter-group__title").text(f.label);
+      const list = group.append("div").attr("class", "checklist").style("max-height", "none");
+      const rows = list.selectAll(".checkrow").data(options, (d) => d).join("label").attr("class", "checkrow");
+      rows.html((d) => `<input type="checkbox" /><span>${d}</span><small data-count></small>`);
+      rows.select("input").on("change", (_, d) => toggleFilter(f.key, d));
+    }
+  }
+
+  function renderFilterCounts(current) {
+    d3.select("#filter-count-hint").text(`${fmt(current.length)} / ${fmt(acordos.length)}`);
+    // atualiza checkbox marcado + contagem, por grupo (ordem == FILTER_FIELDS,
+    // já que os grupos foram criados nessa mesma ordem em renderFilterPanel)
+    d3.select("#filters-panel").selectAll(".filter-group").each(function (_, gi) {
+      const f = FILTER_FIELDS[gi];
+      const counts = countBy(current, (a) => a[f.field]);
+      d3.select(this).selectAll(".checkrow").each(function (d) {
+        d3.select(this).select("input").property("checked", filters[f.key].has(d));
+        d3.select(this).select("[data-count]").text(fmt(counts.get(d) || 0));
+      });
+    });
   }
 })();
