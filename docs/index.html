@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<script>(function(){var t=localStorage.getItem('acordos-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);})();</script>
+<title>Acordos Internacionais · UEA</title>
+<link rel="stylesheet" href="css/style.css?v=1" />
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar__brand">
+    <img src="image/propespuea.svg" alt="PROPESP UEA" class="topbar__logo" />
+    <div class="topbar__title">
+      <strong>Acordos Internacionais</strong>
+      <span>Convênios da UEA no mundo</span>
+    </div>
+  </div>
+
+  <nav class="topbar__nav">
+    <button type="button" id="theme-toggle" class="theme-toggle" aria-label="Alternar tema">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+    </button>
+  </nav>
+</header>
+
+<main class="layout--acordos">
+
+  <!-- ===================== Cartões de indicadores ===================== -->
+  <div class="panel">
+    <div class="stat-row">
+      <div class="stat-tile"><b id="stat-paises">—</b><small>Países</small></div>
+      <div class="stat-tile"><b id="stat-acordos">—</b><small>Acordos</small></div>
+      <div class="stat-tile"><b id="stat-ativos">—</b><small>Vigentes</small></div>
+      <div class="stat-tile"><b id="stat-expirados">—</b><small>Expirados</small></div>
+      <div class="stat-tile"><b id="stat-instituicoes">—</b><small>Instituições</small></div>
+    </div>
+  </div>
+
+  <!-- ===================== Barras + Combo ===================== -->
+  <div class="acordos-row">
+    <div class="panel">
+      <div class="panel__header"><span class="panel__title">Acordos por país</span></div>
+      <div class="panel__body" id="bar-chart" style="height:calc(100% - 30px); overflow-y:auto;"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel__header">
+        <span class="panel__title">Acordos por ano</span>
+        <span class="panel__hint">colunas = novos · linha = acumulado</span>
+      </div>
+      <div class="panel__body" id="combo-chart" style="height:calc(100% - 30px);"></div>
+    </div>
+  </div>
+
+  <!-- ===================== Mapa de fluxo ===================== -->
+  <div class="panel panel--flush" style="display:flex; flex-direction:column;">
+    <div class="panel__header" style="padding:14px 16px 0;">
+      <span class="panel__title">Acordos por continente — fluxo Manaus × mundo</span>
+      <span class="flow-legend" id="continent-legend"></span>
+    </div>
+    <div style="flex:1; min-height:0;" id="flow-chart"></div>
+  </div>
+
+</main>
+
+<footer class="site-credit">Powered by William Pinheiro</footer>
+
+<script src="lib/d3.v7.min.js"></script>
+<script src="lib/topojson-client.min.js"></script>
+<script src="js/common.js?v=1"></script>
+<script src="js/charts.js?v=1"></script>
+<script src="js/flowmap.js?v=1"></script>
+<script src="js/main.js?v=1"></script>
+</body>
+</html>

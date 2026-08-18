@@ -1,0 +1,117 @@
+/* ==========================================================================
+   Acordos Internacionais — utilidades compartilhadas: dados, paleta, tema
+   ========================================================================== */
+let CAT_COLORS = [
+  "#2a78d6", "#eb6834", "#1baf7a", "#eda100",
+  "#e87ba4", "#008300", "#4a3aa7", "#e34948",
+];
+
+let GREEN_SEQUENTIAL = ["#eaf7f0", "#c7ecda", "#96dab9", "#5fc192", "#2e9e6c", "#0f7a4d", "#0b5c3a"];
+let CHART_MAP_FILL = "#eef5f1";
+let CHART_MAP_BORDER = "#0b6b45";
+let CHART_NODE_NEUTRAL = "#0b3d2b";
+
+/* ---------- tema claro/escuro ---------- */
+const THEME_KEY = "acordos-theme";
+
+function readCssVar(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+function refreshThemeColors() {
+  CAT_COLORS = [1, 2, 3, 4, 5, 6, 7, 8].map((i) => readCssVar(`--cat-${i}`));
+  GREEN_SEQUENTIAL = [1, 2, 3, 4, 5, 6, 7].map((i) => readCssVar(`--chart-seq-${i}`));
+  CHART_MAP_FILL = readCssVar("--chart-map-fill");
+  CHART_MAP_BORDER = readCssVar("--chart-map-border");
+  CHART_NODE_NEUTRAL = readCssVar("--chart-node-neutral");
+}
+
+function getTheme() {
+  return document.documentElement.getAttribute("data-theme") ||
+    (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  localStorage.setItem(THEME_KEY, theme);
+  refreshThemeColors();
+  const btn = document.getElementById("theme-toggle");
+  if (btn) btn.setAttribute("aria-label", theme === "dark" ? "Mudar para tema claro" : "Mudar para tema escuro");
+  window.dispatchEvent(new CustomEvent("acordos:themechange", { detail: { theme } }));
+}
+
+function toggleTheme() { applyTheme(getTheme() === "dark" ? "light" : "dark"); }
+
+function initThemeToggle() {
+  refreshThemeColors();
+  const theme = getTheme();
+  const btn = document.getElementById("theme-toggle");
+  if (btn) {
+    btn.setAttribute("aria-label", theme === "dark" ? "Mudar para tema claro" : "Mudar para tema escuro");
+    btn.addEventListener("click", toggleTheme);
+  }
+}
+
+/* ---------- dados ---------- */
+async function loadData() {
+  const opts = { cache: "no-cache" };
+  return fetch("../data/dashboard.json", opts).then((r) => r.json());
+}
+
+/* ---------- agregações ---------- */
+function countBy(arr, keyFn) {
+  const m = new Map();
+  for (const item of arr) {
+    const k = keyFn(item);
+    m.set(k, (m.get(k) || 0) + 1);
+  }
+  return m;
+}
+
+function topEntries(map, n) {
+  return [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, n);
+}
+
+/* categoriza continentes presentes num conjunto, cor fixa por continente */
+function buildContinentColorScale(items, keyFn) {
+  const counts = countBy(items, keyFn);
+  const ordered = topEntries(counts, 8).map(([k]) => k);
+  const scale = new Map();
+  ordered.forEach((k, i) => scale.set(k, CAT_COLORS[i % CAT_COLORS.length]));
+  return scale;
+}
+
+/* ---------- tooltip global ---------- */
+let tooltipEl = null;
+function ensureTooltip() {
+  if (!tooltipEl) {
+    tooltipEl = document.createElement("div");
+    tooltipEl.className = "viz-tooltip";
+    document.body.appendChild(tooltipEl);
+  }
+  return tooltipEl;
+}
+function showTooltip(x, y, html) {
+  const el = ensureTooltip();
+  el.innerHTML = html;
+  el.style.left = x + "px";
+  el.style.top = y + "px";
+  el.classList.add("is-visible");
+}
+function moveTooltip(x, y) {
+  if (tooltipEl) { tooltipEl.style.left = x + "px"; tooltipEl.style.top = y + "px"; }
+}
+function hideTooltip() {
+  if (tooltipEl) tooltipEl.classList.remove("is-visible");
+}
+
+function fmt(n) { return n.toLocaleString("pt-BR"); }
+
+function debounce(fn, ms) {
+  let t;
+  return function (...args) {
+    const ctx = this;
+    clearTimeout(t);
+    t = setTimeout(() => fn.apply(ctx, args), ms);
+  };
+}
