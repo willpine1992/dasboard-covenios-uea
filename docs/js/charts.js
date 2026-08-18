@@ -124,7 +124,7 @@ function renderComboChart(el, porAno) {
     .attr("class", "combo-line")
     .attr("d", line(porAno))
     .attr("fill", "none")
-    .attr("stroke", "var(--accent-strong)")
+    .attr("stroke", "var(--cat-2)")
     .attr("stroke-width", 2.4);
 
   g.selectAll("circle.combo-dot")
@@ -134,7 +134,7 @@ function renderComboChart(el, porAno) {
     .attr("cx", (d) => x(d.ano) + x.bandwidth() / 2)
     .attr("cy", (d) => yLine(d.acumulado))
     .attr("r", 4)
-    .attr("fill", "var(--accent-strong)")
+    .attr("fill", "var(--cat-2)")
     .attr("stroke", "var(--surface-panel)")
     .attr("stroke-width", 2)
     .on("mousemove", (ev, d) => showTooltip(ev.clientX, ev.clientY,
@@ -148,7 +148,7 @@ function renderComboChart(el, porAno) {
     .attr("x", (d) => x(d.ano) + x.bandwidth() / 2)
     .attr("y", (d) => yLine(d.acumulado) - 10)
     .attr("text-anchor", "middle")
-    .style("fill", "var(--accent-strong)")
+    .style("fill", "var(--cat-2)")
     .text((d) => fmt(d.acumulado));
 }
 
