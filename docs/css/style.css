@@ -436,7 +436,7 @@ h1, h2, h3 { color: var(--ink-primary); margin: 0; font-weight: 700; letter-spac
 .gantt-today-label { font-family: var(--font); font-size: 10px; font-weight: 800; fill: var(--accent-strong); }
 .gantt-axis .domain { stroke: var(--border-hairline); }
 .gantt-axis-year { font-weight: 800; }
-.gantt-axis-sem { font-size: 9.5px; fill: var(--ink-muted); }
+.gantt-axis-sem { font-size: 9.5px; fill: var(--ink-muted); opacity: 0.55; }
 .gantt-axis-tick-year { stroke: var(--border-strong); stroke-width: 1px; }
 .gantt-axis-tick-sem { stroke: var(--border-hairline); stroke-width: 1px; }
 .gantt-axis-divider { stroke: var(--border-hairline); }
