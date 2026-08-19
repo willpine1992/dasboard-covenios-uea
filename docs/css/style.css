@@ -424,7 +424,6 @@ h1, h2, h3 { color: var(--ink-primary); margin: 0; font-weight: 700; letter-spac
 .combo-bar { fill: var(--chart-seq-3); transition: fill var(--dur-fast) var(--ease); }
 .combo-bar:hover { fill: var(--chart-seq-4); }
 .combo-bar.is-selected { fill: var(--accent-strong); }
-.combo-bar-value { font-family: var(--font); font-size: 10px; font-weight: 700; fill: var(--ink-secondary); font-variant-numeric: tabular-nums; }
 .combo-line-value { font-family: var(--font); font-size: 10px; font-weight: 800; font-variant-numeric: tabular-nums; }
 
 /* ---------------- Gantt (vigência dos acordos) ---------------- */

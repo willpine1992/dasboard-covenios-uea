@@ -120,15 +120,6 @@ function renderComboChart(el, porAno, opts = {}) {
         `<b>${d.ano}</b><br>${fmt(d.novos)} acordo(s) novo(s)<br><span class="muted text-xs">clique p/ filtrar</span>`))
       .on("mouseleave", hideTooltip)
       .on("click", (ev, d) => { opts.onYearClick && opts.onYearClick(d.ano); });
-
-    g.selectAll("text.combo-bar-value")
-      .data(porAno)
-      .join("text")
-      .attr("class", "combo-bar-value")
-      .attr("x", (d) => x(d.ano) + x.bandwidth() / 2)
-      .attr("y", (d) => yBar(d.novos) - 6)
-      .attr("text-anchor", "middle")
-      .text((d) => fmt(d.novos));
   }
 
   // linha: acumulado
