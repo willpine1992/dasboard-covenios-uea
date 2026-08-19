@@ -202,7 +202,7 @@ function renderGanttChart(el, acordos, opts = {}) {
   measureSvg.remove();
 
   const left = Math.min(Math.max(140, width * 0.5), maxLabelW + 26);
-  const margin = { top: 34, right: 20, bottom: 6, left };
+  const margin = { top: 48, right: 20, bottom: 6, left };
   const rowH = opts.rowHeight || 24;
   const innerH = rows.length * rowH;
   const innerW = width - margin.left - margin.right;
@@ -222,7 +222,7 @@ function renderGanttChart(el, acordos, opts = {}) {
   const rowsWrap = container.append("div").attr("class", "gantt-rows-wrap");
 
   const axisSvg = axisWrap.append("svg").attr("width", width).attr("height", margin.top);
-  const gAxis = axisSvg.append("g").attr("class", "gantt-axis").attr("transform", `translate(${margin.left},${margin.top - 10})`);
+  const gAxis = axisSvg.append("g").attr("class", "gantt-axis").attr("transform", `translate(${margin.left},0)`);
   const todayLabel = axisSvg.append("text").attr("class", "gantt-today-label");
 
   const svg = rowsWrap.append("svg").attr("width", width).attr("height", innerH);
@@ -270,30 +270,75 @@ function renderGanttChart(el, acordos, opts = {}) {
   const todayLine = gClip.append("line").attr("class", "gantt-today-line")
     .attr("y1", 0).attr("y2", innerH);
 
-  // granularidade do eixo: "ano" (ticks em 1º de janeiro) ou "semestre"
-  // (ticks em 1º de janeiro e 1º de julho) — d3.timeMonth.every(6) cai
-  // certinho nessas duas datas porque o mês 0 (jan/1970) é múltiplo de 6
-  const granularity = opts.granularity === "semestre" ? "semestre" : "ano";
-  function ganttInterval() {
-    return granularity === "semestre" ? d3.timeMonth.every(6) : d3.timeYear.every(1);
+  // eixo de duas linhas: ano (em cima) e semestre 1|2 (embaixo) — em vez
+  // de rótulos alinhados a um tick (d3.axisTop padrão), os rótulos ficam
+  // centrados no vão de cada banda (o ano/semestre inteiro), com uma
+  // linha separadora nos limites reais (1º jan / 1º jul)
+  function bandBoundaries(domain, interval) {
+    const [d0, d1] = domain;
+    let start = interval.floor(d0);
+    if (start > d0) start = interval.offset(start, -1);
+    const bounds = interval.range(start, interval.offset(interval.ceil(d1), 1));
+    bounds.push(interval.offset(bounds[bounds.length - 1], 1));
+    return bounds;
   }
-  function ganttTickFormat() {
-    if (granularity === "ano") return d3.timeFormat("%Y");
-    return (date) => `${date.getMonth() < 6 ? "1º sem" : "2º sem"} ${date.getFullYear()}`;
+
+  function bands(xScale, interval, labelFn) {
+    const domain = xScale.domain();
+    const bounds = bandBoundaries(domain, interval);
+    const out = [];
+    for (let i = 0; i < bounds.length - 1; i++) {
+      const a = bounds[i], b = bounds[i + 1];
+      const va = a < domain[0] ? domain[0] : a;
+      const vb = b > domain[1] ? domain[1] : b;
+      if (vb <= va) continue;
+      out.push({ xMid: (xScale(va) + xScale(vb)) / 2, xStart: xScale(a), label: labelFn(a) });
+    }
+    return out;
   }
+
+  const rowTop = 4, yearY = 17, semY = 39, rowBottom = margin.top - 3;
 
   function draw(xScale) {
     bars.attr("x", (d) => xScale(new Date(d.data_inicio)))
       .attr("width", (d) => Math.max(2, xScale(new Date(d.data_fim)) - xScale(new Date(d.data_inicio))));
     const tx = xScale(today);
     todayLine.attr("x1", tx).attr("x2", tx);
-    todayLabel.attr("x", margin.left + tx + 4).attr("y", margin.top - 20);
+    todayLabel.attr("x", margin.left + tx + 4).attr("y", 9);
 
-    const axis = d3.axisTop(xScale).ticks(ganttInterval()).tickFormat(ganttTickFormat()).tickSizeOuter(0);
-    gAxis.call(axis);
-    gAxis.selectAll("text").attr("class", "bar-label");
-    gAxis.select(".domain").attr("stroke", "var(--border-hairline)");
-    gAxis.selectAll(".tick line").attr("stroke", "var(--border-hairline)");
+    gAxis.selectAll("*").remove();
+
+    const yearBands = bands(xScale, d3.timeYear, (d) => String(d.getFullYear()));
+    const semBands = bands(xScale, d3.timeMonth.every(6), (d) => (d.getMonth() < 6 ? "1" : "2"));
+
+    gAxis.append("line").attr("class", "gantt-axis-divider")
+      .attr("x1", 0).attr("x2", innerW).attr("y1", semY - 12).attr("y2", semY - 12);
+
+    gAxis.selectAll("line.gantt-axis-tick-year")
+      .data(yearBands.slice(1)).join("line")
+      .attr("class", "gantt-axis-tick-year")
+      .attr("x1", (d) => d.xStart).attr("x2", (d) => d.xStart)
+      .attr("y1", rowTop).attr("y2", rowBottom);
+
+    gAxis.selectAll("text.gantt-axis-year")
+      .data(yearBands).join("text")
+      .attr("class", "bar-label gantt-axis-year")
+      .attr("x", (d) => d.xMid).attr("y", yearY)
+      .attr("text-anchor", "middle")
+      .text((d) => d.label);
+
+    gAxis.selectAll("line.gantt-axis-tick-sem")
+      .data(semBands.slice(1)).join("line")
+      .attr("class", "gantt-axis-tick-sem")
+      .attr("x1", (d) => d.xStart).attr("x2", (d) => d.xStart)
+      .attr("y1", semY - 12).attr("y2", rowBottom);
+
+    gAxis.selectAll("text.gantt-axis-sem")
+      .data(semBands).join("text")
+      .attr("class", "bar-label gantt-axis-sem")
+      .attr("x", (d) => d.xMid).attr("y", semY)
+      .attr("text-anchor", "middle")
+      .text((d) => d.label);
   }
   draw(x0);
   todayLabel.text("Hoje");
@@ -310,16 +355,6 @@ function renderGanttChart(el, acordos, opts = {}) {
     .attr("width", innerW).attr("height", innerH)
     .attr("fill", "transparent")
     .call(zoom);
-
-  if (opts.granularityControls) {
-    const gBar = d3.select(opts.granularityControls);
-    gBar.html("");
-    const options = [{ key: "ano", label: "Anual" }, { key: "semestre", label: "Semestral" }];
-    gBar.selectAll(".gantt-zoom-btn").data(options).join("button")
-      .attr("class", (d) => "btn btn--ghost gantt-zoom-btn" + (d.key === granularity ? " is-active" : ""))
-      .text((d) => d.label)
-      .on("click", (_, d) => opts.onGranularityChange && opts.onGranularityChange(d.key));
-  }
 
   if (opts.zoomControls) {
     d3.select(opts.zoomControls).html("");

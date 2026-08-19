@@ -160,7 +160,7 @@ async function captureReportCharts(acordos, meta) {
     const charts = {};
 
     charts.gantt = acordos.length
-      ? await captureChart((el) => renderGanttChart(el, acordos, { continentColor, granularity: meta.ganttGranularity }), { width: 760 })
+      ? await captureChart((el) => renderGanttChart(el, acordos, { continentColor }), { width: 760 })
       : null;
 
     charts.combo = acordos.length
