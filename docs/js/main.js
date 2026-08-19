@@ -67,10 +67,24 @@
   }
 
   d3.select("#btn-clear-filters-top").on("click", clearFilters);
-  d3.select("#btn-report").on("click", () => {
+  d3.select("#btn-report").on("click", (ev) => {
+    const btn = ev.currentTarget;
+    // abre a aba já no clique (gesto síncrono do usuário) — se abrir só
+    // depois dos awaits de captura dos gráficos, o Chrome trata como
+    // pop-up não solicitado e bloqueia silenciosamente
+    const reportTab = window.open("", "_blank");
+    if (reportTab) {
+      reportTab.document.title = "Gerando relatório…";
+      reportTab.document.body.style.cssText = "font-family:-apple-system,Helvetica,Arial,sans-serif; color:#666; padding:60px;";
+      reportTab.document.body.textContent = "Gerando relatório…";
+    }
+    btn.disabled = true;
+    const original = btn.textContent;
+    btn.textContent = "Gerando…";
     generateAcordosReport(filteredAcordos(), {
       filters, FILTER_FIELDS, selectedAno, selectedPais, totalCount: acordos.length,
-    });
+      ganttGranularity, showBars, showLine,
+    }, reportTab).finally(() => { btn.disabled = false; btn.textContent = original; });
   });
 
   renderFilterPanel();

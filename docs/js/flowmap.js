@@ -18,7 +18,8 @@ function initFlowGlobe(el, { paisesGeo, manaus, continentColor, world, onSelect 
   let active = null; // país selecionado (persiste entre rebuilds: resize/tema)
 
   build();
-  window.addEventListener("resize", debounce(build, 200));
+  const debouncedBuild = debounce(build, 200);
+  window.addEventListener("resize", debouncedBuild);
   window.addEventListener("acordos:themechange", build);
 
   function build() {
@@ -177,7 +178,13 @@ function initFlowGlobe(el, { paisesGeo, manaus, continentColor, world, onSelect 
     return d3.range(0, n + 1).map((i) => interp(i / n));
   }
 
-  return { setActive };
+  return {
+    setActive,
+    destroy: () => {
+      window.removeEventListener("resize", debouncedBuild);
+      window.removeEventListener("acordos:themechange", build);
+    },
+  };
 }
 
 let _worldCache = null;
