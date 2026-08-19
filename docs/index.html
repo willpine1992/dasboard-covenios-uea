@@ -27,6 +27,7 @@
     <a href="fluxo.html" class="topbar__link">Mapa de Fluxo</a>
     <a href="https://willpine1992.github.io/dashboard-geral/docs/index.html" class="topbar__link" target="_blank" rel="noopener">Prospecção ↗</a>
     <button class="btn btn--ghost" id="btn-clear-filters-top" style="margin-left:4px;">Limpar filtros</button>
+    <button class="btn" id="btn-report">Relatório PDF</button>
   </nav>
 </header>
 
@@ -71,7 +72,10 @@
   <div class="panel panel--flush" style="display:flex; flex-direction:column;">
     <div class="panel__header" style="padding:14px 16px 0;">
       <span class="panel__title">Vigência dos acordos</span>
-      <span class="gantt-toolbar" id="gantt-zoom"></span>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <span class="gantt-toolbar" id="gantt-granularity"></span>
+        <span class="gantt-toolbar" id="gantt-zoom"></span>
+      </div>
     </div>
     <div style="flex:1; min-height:0;" id="gantt-chart"></div>
   </div>
@@ -81,8 +85,11 @@
 <footer class="site-credit">Powered by William Pinheiro</footer>
 
 <script src="lib/d3.v7.min.js"></script>
+<script src="lib/jspdf.umd.min.js"></script>
+<script src="lib/jspdf.plugin.autotable.min.js"></script>
 <script src="js/common.js?v=6"></script>
 <script src="js/charts.js?v=6"></script>
+<script src="js/report.js?v=1"></script>
 <script src="js/main.js?v=6"></script>
 </body>
 </html>

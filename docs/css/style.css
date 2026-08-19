@@ -439,6 +439,7 @@ h1, h2, h3 { color: var(--ink-primary); margin: 0; font-weight: 700; letter-spac
 .gantt-zoom-catcher:active { cursor: grabbing; }
 .gantt-toolbar { display: flex; gap: 6px; align-items: center; }
 .gantt-zoom-btn { padding: 4px 10px; font-size: 11px; border-radius: var(--radius-sm); }
+.gantt-zoom-btn.is-active { background: var(--ink-primary); color: var(--ink-on-accent); border-color: var(--ink-primary); }
 
 .series-toggle { display: flex; gap: 6px; align-items: center; }
 .series-toggle__item {

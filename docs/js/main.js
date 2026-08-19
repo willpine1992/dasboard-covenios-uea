@@ -22,6 +22,7 @@
   let selectedAno = null; // clique numa coluna de "Acordos por ano"
   let selectedPais = null; // clique numa barra de "Acordos por país"
   let showBars = true, showLine = true; // toggle de séries do combo chart
+  let ganttGranularity = "ano"; // granularidade do eixo do Gantt: "ano" | "semestre"
 
   // filtrado por tudo, exceto o que estiver em `exclude` — assim cada
   // gráfico "dono" de um filtro por-clique (ano/país) continua mostrando
@@ -59,7 +60,18 @@
     renderAll();
   }
 
+  function setGanttGranularity(key) {
+    if (ganttGranularity === key) return;
+    ganttGranularity = key;
+    renderAll();
+  }
+
   d3.select("#btn-clear-filters-top").on("click", clearFilters);
+  d3.select("#btn-report").on("click", () => {
+    generateAcordosReport(filteredAcordos(), {
+      filters, FILTER_FIELDS, selectedAno, selectedPais, totalCount: acordos.length,
+    });
+  });
 
   renderFilterPanel();
   renderSeriesToggle();
@@ -86,6 +98,9 @@
     renderGanttChart(document.getElementById("gantt-chart"), current, {
       continentColor,
       zoomControls: "#gantt-zoom",
+      granularityControls: "#gantt-granularity",
+      granularity: ganttGranularity,
+      onGranularityChange: setGanttGranularity,
     });
     renderFilterCounts(current);
   }

@@ -270,6 +270,18 @@ function renderGanttChart(el, acordos, opts = {}) {
   const todayLine = gClip.append("line").attr("class", "gantt-today-line")
     .attr("y1", 0).attr("y2", innerH);
 
+  // granularidade do eixo: "ano" (ticks em 1º de janeiro) ou "semestre"
+  // (ticks em 1º de janeiro e 1º de julho) — d3.timeMonth.every(6) cai
+  // certinho nessas duas datas porque o mês 0 (jan/1970) é múltiplo de 6
+  const granularity = opts.granularity === "semestre" ? "semestre" : "ano";
+  function ganttInterval() {
+    return granularity === "semestre" ? d3.timeMonth.every(6) : d3.timeYear.every(1);
+  }
+  function ganttTickFormat() {
+    if (granularity === "ano") return d3.timeFormat("%Y");
+    return (date) => `${date.getMonth() < 6 ? "1º sem" : "2º sem"} ${date.getFullYear()}`;
+  }
+
   function draw(xScale) {
     bars.attr("x", (d) => xScale(new Date(d.data_inicio)))
       .attr("width", (d) => Math.max(2, xScale(new Date(d.data_fim)) - xScale(new Date(d.data_inicio))));
@@ -277,7 +289,7 @@ function renderGanttChart(el, acordos, opts = {}) {
     todayLine.attr("x1", tx).attr("x2", tx);
     todayLabel.attr("x", margin.left + tx + 4).attr("y", margin.top - 20);
 
-    const axis = d3.axisTop(xScale).ticks(Math.max(2, Math.round(innerW / 90))).tickSizeOuter(0);
+    const axis = d3.axisTop(xScale).ticks(ganttInterval()).tickFormat(ganttTickFormat()).tickSizeOuter(0);
     gAxis.call(axis);
     gAxis.selectAll("text").attr("class", "bar-label");
     gAxis.select(".domain").attr("stroke", "var(--border-hairline)");
@@ -298,6 +310,16 @@ function renderGanttChart(el, acordos, opts = {}) {
     .attr("width", innerW).attr("height", innerH)
     .attr("fill", "transparent")
     .call(zoom);
+
+  if (opts.granularityControls) {
+    const gBar = d3.select(opts.granularityControls);
+    gBar.html("");
+    const options = [{ key: "ano", label: "Anual" }, { key: "semestre", label: "Semestral" }];
+    gBar.selectAll(".gantt-zoom-btn").data(options).join("button")
+      .attr("class", (d) => "btn btn--ghost gantt-zoom-btn" + (d.key === granularity ? " is-active" : ""))
+      .text((d) => d.label)
+      .on("click", (_, d) => opts.onGranularityChange && opts.onGranularityChange(d.key));
+  }
 
   if (opts.zoomControls) {
     d3.select(opts.zoomControls).html("");
