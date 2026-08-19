@@ -3,7 +3,7 @@
    ========================================================================== */
 (async function () {
   const data = await loadData();
-  const { por_pais, paises_geo, manaus, acordos } = data;
+  const { por_pais, instituicoes_geo, manaus, acordos } = data;
 
   initThemeToggle();
 
@@ -12,7 +12,7 @@
 
   const world = await getWorld();
   const globe = initFlowGlobe(document.getElementById("flow-chart"), {
-    paisesGeo: paises_geo, manaus, continentColor, world,
+    paisesGeo: instituicoes_geo, manaus, continentColor, world,
     onSelect: showDetail,
   });
 
@@ -23,22 +23,22 @@
       .html(([continente, color]) => `<span class="flow-legend__swatch" style="background:${color}"></span>${continente}`);
   }
 
-  function showDetail(pais) {
-    if (!pais) { d3.select("#flow-detail").classed("is-visible", false); return; }
+  function showDetail(inst) {
+    if (!inst) { d3.select("#flow-detail").classed("is-visible", false); return; }
 
-    const acordosPais = acordos
-      .filter((a) => a.pais === pais.pais)
+    const acordosInst = acordos
+      .filter((a) => a.instituicao === inst.instituicao)
       .sort((a, b) => new Date(b.data_inicio) - new Date(a.data_inicio));
 
-    d3.select("#fd-title").text(pais.pais);
+    d3.select("#fd-title").text(inst.instituicao);
     d3.select("#fd-sub").text(
-      `${pais.continente} · ${fmt(acordosPais.length)} acordo(s) · ${fmt(pais.n_ativos)} vigente(s)`
+      `${inst.pais} · ${inst.continente} · ${fmt(acordosInst.length)} acordo(s) · ${fmt(inst.n_ativos)} vigente(s)`
     );
 
-    const rows = d3.select("#fd-acordos").selectAll(".pickrow").data(acordosPais, (d) => d.id).join("div").attr("class", "pickrow");
+    const rows = d3.select("#fd-acordos").selectAll(".pickrow").data(acordosInst, (d) => d.id).join("div").attr("class", "pickrow");
     rows.html((d) => `
       <span class="dot" style="background:${d.ativo ? "var(--accent)" : "var(--border-strong)"}"></span>
-      <span class="label" title="${d.instituicao}">${d.instituicao}</span>
+      <span class="label" title="${d.tipo}">${d.tipo}</span>
       <span class="count">${fmtDate(d.data_inicio)}–${fmtDate(d.data_fim)}</span>`);
 
     d3.select("#flow-detail").classed("is-visible", true);

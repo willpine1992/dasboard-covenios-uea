@@ -88,16 +88,20 @@ function initFlowGlobe(el, { paisesGeo, manaus, continentColor, world, onSelect 
 
     arcs
       .on("mousemove", (ev, d) => {
+        const titulo = d.instituicao || d.pais;
+        const subtitulo = d.instituicao ? `${d.pais} · ${d.continente}` : d.continente;
         showTooltip(ev.clientX, ev.clientY,
-          `<b>${d.pais}</b><br>${d.continente}<br>${fmt(d.n_acordos)} acordo(s) · ${fmt(d.n_ativos)} vigente(s)`);
+          `<b>${titulo}</b><br>${subtitulo}<br>${fmt(d.n_acordos)} acordo(s) · ${fmt(d.n_ativos)} vigente(s)`);
         ev.stopPropagation();
       })
       .on("mouseleave", hideTooltip)
       .on("click", (ev, d) => { ev.stopPropagation(); setActive(d); });
     dots
       .on("mousemove", (ev, d) => {
+        const titulo = d.instituicao || d.pais;
+        const subtitulo = d.instituicao ? `${d.pais} · ${d.continente}` : d.continente;
         showTooltip(ev.clientX, ev.clientY,
-          `<b>${d.pais}</b><br>${d.continente}<br>${fmt(d.n_acordos)} acordo(s) · ${fmt(d.n_ativos)} vigente(s)`);
+          `<b>${titulo}</b><br>${subtitulo}<br>${fmt(d.n_acordos)} acordo(s) · ${fmt(d.n_ativos)} vigente(s)`);
         ev.stopPropagation();
       })
       .on("mouseleave", hideTooltip)
