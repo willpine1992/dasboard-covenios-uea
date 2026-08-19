@@ -344,7 +344,10 @@ function renderGanttChart(el, acordos, opts = {}) {
   todayLabel.text("Hoje");
 
   // ---- zoom (só no eixo do tempo — rows continuam fixas, sem distorcer) ----
+  // scroll do mouse desligado de propósito (zoom só pelos botões +/−);
+  // arrastar continua funcionando pra rolar o eixo depois de dar zoom
   const zoom = d3.zoom()
+    .filter((ev) => ev.type !== "wheel")
     .scaleExtent([1, 30])
     .translateExtent([[0, 0], [innerW, 0]])
     .extent([[0, 0], [innerW, innerH]])
