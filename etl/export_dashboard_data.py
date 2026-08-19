@@ -32,6 +32,17 @@ COUNTRY_CENTER_FALLBACK: dict[str, tuple[float, float]] = {
     "Brasil": (-14.2350, -51.9253),
 }
 
+# override manual pra instituições cujo geocoding automático (nome exato
+# ou variantes) cai num lugar errado/pouco útil — ex.: "Fundação
+# Universidade do Amazonas" sem o "FUA" geocodificava só como "Brasil" e
+# caía no centro geográfico do país (região Nordeste); e mesmo achando a
+# cidade certa (Manaus), o ponto ficaria empilhado bem em cima da origem
+# de todos os arcos. Usa o centro do estado do Amazonas como meio-termo:
+# geograficamente correto, sem coincidir com o marcador de Manaus.
+INSTITUTION_COORDS_OVERRIDE: dict[str, tuple[float, float]] = {
+    "Fundação Universidade do Amazonas – FUA": (-4.4799250, -63.5185396),
+}
+
 
 def resolve_country_coords(pais: str, geocoder: Geocoder) -> tuple[float | None, float | None]:
     lat, lon = geocoder.geocode(pais, None, None)
@@ -70,6 +81,10 @@ def resolve_institution_coords(
     tenta variantes simplificadas (sem sigla/subunidade, ou só a sigla)
     antes de cair pro centro do país — melhor um ponto aproximado do que
     nenhum ponto. Retorna (lat, lon, achou_cidade)."""
+    if instituicao in INSTITUTION_COORDS_OVERRIDE:
+        lat, lon = INSTITUTION_COORDS_OVERRIDE[instituicao]
+        return lat, lon, True
+
     lat, lon = geocoder.geocode(instituicao, None, pais)
     if lat is not None:
         return lat, lon, True
