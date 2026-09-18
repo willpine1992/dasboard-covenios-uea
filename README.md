@@ -4,7 +4,9 @@ Dashboard estático com os acordos bilaterais internacionais da **Universidade
 do Estado do Amazonas (UEA)**: quantos, com quem, desde quando, e pra onde
 apontam no mapa a partir de Manaus.
 
-**🔗 Site publicado:** https://willpine1992.github.io/dasboard-covenios-uea/
+**🔗 Site publicado:**
+- https://willpine1992.github.io/dasboard-covenios-uea/
+- https://internacionalizacao-create.github.io/dasboard-covenios-uea/
 
 ## O que tem no dashboard
 
